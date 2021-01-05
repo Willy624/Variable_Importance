@@ -30,13 +30,16 @@ permutation_imp <- function(formula, data, feature_list, k = 30) {
   
   for (i in feature_list) {
     score <- 0
+    # Store data frame in a new variable to avoid altering original data.
     new_data <- data
   
     # In GAM feature_list, we have to distinguish between smoothing terms and parameter terms.
-    # Parameter terms effective degree of freedom will appear in pTerms (in a specific order, so we need to be careful)
+    # Parameter terms effective degree of freedom will appear in pTerms (in a specific order without variable name, so we need to be careful)
     # Smoothing terms effective degree of freedom will appear in s.table under the row_index of "s(...)"
     # The reason to care about edf is because when calculating adjusted R-squares edf matters,
     # and if we shuffle one column of observations, we should not take that columns edf into account.
+    
+    # Rewrite this part to put if and else into smooth and parameter terms.
     if (i == "landcat") {
       adj_df <- summary(model)$pTerms.df[[1]]
       denominator <- var(data$loglandprice_rm10med_cy_19 - mean(data$loglandprice_rm10med_cy_19))*(model$df.residual + adj_df)
@@ -56,7 +59,7 @@ permutation_imp <- function(formula, data, feature_list, k = 30) {
       }
     }
     
-    # This part
+    # This part deals with all reshuffling and the trickier geo_control case (which is not general, thus can be commented out).
     if (i == "geo_control") {
       for (j in 1:k) {
         new_data <- new_data %>%
